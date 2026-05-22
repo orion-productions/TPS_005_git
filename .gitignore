@@ -1,0 +1,26 @@
+# Unreal Engine
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+*.sln.docstates
+*.user
+*.userosscache
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Cursor / local tooling (optional)
+tasks/
