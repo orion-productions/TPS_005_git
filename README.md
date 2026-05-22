@@ -17,6 +17,18 @@ Third-person prototype built in **Unreal Engine 5.7** (TPS template). Orion Prod
 - Visual Studio 2022 with C++ game development workload (Windows)
 - Optional: [Holodeck](https://github.com/orion-productions) editor MCP plugin (see `AdditionalPluginDirectories` in `.uproject`)
 
+## Cursor MCP (agent servers)
+
+These are the **display names** in Cursor’s MCP settings. Install paths and tool names may still use `holodeck` / `project-rag` internally.
+
+| Cursor MCP name | Role |
+|-----------------|------|
+| `agentic-control-UEditor` | Control the open Unreal Editor (Holodeck control server) |
+| `agentic-knowledge-UEDocs` | UE engine docs, API, and Lyra-style examples (Holodeck docs server) |
+| `agentic-knowledge-MyProject` | Semantic search and asset graph for **this** project (`project-rag`) |
+
+Configured in your user `~/.cursor/mcp.json`. After changing keys, reload MCP in Cursor (or restart the IDE).
+
 ## Getting started
 
 1. Clone the repository and open `TPS_005_git.uproject` in Unreal Editor.

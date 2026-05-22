@@ -2,20 +2,20 @@
   "permissions": {
     "allow": [
       "Skill(project-rag:index)",
-      "mcp__project-rag__project_health",
+      "mcp__agentic-knowledge-MyProject__project_health",
       "PowerShell(& \"C:\\\\Users\\\\julie\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Scripts\\\\project-rag.exe\" --help 2>&1)",
       "PowerShell(& \"C:\\\\Users\\\\julie\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" -m pip show project-rag 2>&1)",
       "Bash(C:\\\\Users\\\\julie\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe *)",
       "Bash(python3 -c \"import socket; s=socket.create_connection\\(\\('127.0.0.1',8090\\),timeout=0.5\\); s.close\\(\\); print\\('port 8090: open'\\)\")",
       "Skill(coordinator:handoff)",
-      "mcp__holodeck-control__execute_python_code",
-      "mcp__project-rag__project_asset_registry",
-      "mcp__project-rag__project_semantic_search",
-      "mcp__project-rag__project_referencers",
-      "mcp__project-rag__project_cpp_symbol",
-      "mcp__holodeck-control__inspect",
-      "mcp__project-rag__project_blueprint_graph",
-      "mcp__project-rag__project_rag_blended_query",
+      "mcp__agentic-control-UEditor__execute_python_code",
+      "mcp__agentic-knowledge-MyProject__project_asset_registry",
+      "mcp__agentic-knowledge-MyProject__project_semantic_search",
+      "mcp__agentic-knowledge-MyProject__project_referencers",
+      "mcp__agentic-knowledge-MyProject__project_cpp_symbol",
+      "mcp__agentic-control-UEditor__inspect",
+      "mcp__agentic-knowledge-MyProject__project_blueprint_graph",
+      "mcp__agentic-knowledge-MyProject__project_rag_blended_query",
       "Bash(C:/Users/julie/AppData/Local/Programs/Python/Python312/python.exe *)"
     ]
   }
