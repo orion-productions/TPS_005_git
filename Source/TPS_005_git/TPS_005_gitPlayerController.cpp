@@ -10,15 +10,39 @@
 #include "Blueprint/UserWidget.h"
 #include "TPS_005_git.h"
 #include "ThirdPerson/TPSCoinCountWidget.h"
+#include "ThirdPerson/TPSInventoryComponent.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+
+ATPS_005_gitPlayerController::ATPS_005_gitPlayerController()
+{
+	InventoryComponent = CreateDefaultSubobject<UTPSInventoryComponent>(TEXT("InventoryComponent"));
+}
 
 void ATPS_005_gitPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (IsLocalPlayerController() && !GetHUD())
+	if (InventoryComponent)
 	{
-		SpawnDefaultHUD();
+		InventoryComponent->OnInventoryChanged.AddDynamic(this, &ATPS_005_gitPlayerController::HandleInventoryChanged);
+		CoinCount = InventoryComponent->GetCoinCount();
+	}
+
+	if (IsLocalPlayerController())
+	{
+		if (!CoinCountWidget)
+		{
+			CoinCountWidget = CreateWidget<UTPSCoinCountWidget>(this, UTPSCoinCountWidget::StaticClass());
+			if (CoinCountWidget)
+			{
+				CoinCountWidget->AddToPlayerScreen(10);
+			}
+		}
+
+		if (!GetHUD())
+		{
+			SpawnDefaultHUD();
+		}
 	}
 
 	// only spawn touch controls on local player controllers
@@ -103,4 +127,12 @@ bool ATPS_005_gitPlayerController::ShouldUseTouchControls() const
 {
 	// are we on a mobile platform? Should we force touch?
 	return SVirtualJoystick::ShouldDisplayTouchInterface() || bForceTouchControls;
+}
+
+void ATPS_005_gitPlayerController::HandleInventoryChanged()
+{
+	if (InventoryComponent)
+	{
+		CoinCount = InventoryComponent->GetCoinCount();
+	}
 }

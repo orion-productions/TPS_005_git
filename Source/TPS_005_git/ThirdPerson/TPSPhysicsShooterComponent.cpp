@@ -81,8 +81,12 @@ AActor* UTPSPhysicsShooterComponent::ShootObject(
 		Primitive->SetSimulatePhysics(true);
 		Primitive->SetEnableGravity(true);
 		Primitive->SetGenerateOverlapEvents(true);
-		Primitive->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+		Primitive->SetCollisionObjectType(ECC_PhysicsBody);
+		Primitive->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+		Primitive->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+		Primitive->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 		Primitive->IgnoreActorWhenMoving(Owner, true);
+		Primitive->WakeAllRigidBodies();
 		Primitive->AddImpulse(Rotation.Vector() * Speed, NAME_None, true);
 	}
 

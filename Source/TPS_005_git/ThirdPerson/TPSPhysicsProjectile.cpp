@@ -24,6 +24,11 @@ ATPSPhysicsProjectile::ATPSPhysicsProjectile()
 	Mesh->SetSimulatePhysics(false);
 	Mesh->SetEnableGravity(true);
 	Mesh->SetMassOverrideInKg(NAME_None, 8.0f, true);
+	Mesh->SetLinearDamping(0.05f);
+	Mesh->SetAngularDamping(0.05f);
 	Mesh->SetGenerateOverlapEvents(true);
-	Mesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	Mesh->SetCollisionObjectType(ECC_PhysicsBody);
+	Mesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	Mesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	Mesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 }

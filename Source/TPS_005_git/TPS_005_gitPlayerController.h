@@ -9,6 +9,7 @@
 class UInputMappingContext;
 class UUserWidget;
 class UTPSCoinCountWidget;
+class UTPSInventoryComponent;
 
 /**
  *  Basic PlayerController class for a third person game
@@ -46,13 +47,22 @@ protected:
 	TObjectPtr<UInputMappingContext> ShootInputMappingContext;
 
 public:
-	/** Number of coins collected by this player */
-	UPROPERTY(BlueprintReadWrite, Category = "Coins")
+	ATPS_005_gitPlayerController();
+
+	/** Tracks coins, weapons, and ammo pickups. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UTPSInventoryComponent> InventoryComponent;
+
+	/** Deprecated: use InventoryComponent coin quantity. Kept for Blueprint compatibility. */
+	UPROPERTY(BlueprintReadOnly, Category = "Coins")
 	int32 CoinCount = 0;
 
 	/** Sci-fi UMG coin counter (bottom-left) */
 	UPROPERTY()
 	TObjectPtr<UTPSCoinCountWidget> CoinCountWidget;
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UTPSInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;
@@ -64,5 +74,8 @@ public:
 	bool ShouldUseTouchControls() const;
 
 	void EnsureShootInputMapping();
+
+	UFUNCTION()
+	void HandleInventoryChanged();
 
 };

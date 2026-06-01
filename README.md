@@ -7,6 +7,7 @@ Third-person prototype built in **Unreal Engine 5.7** (TPS template). Orion Prod
 - **Third-person character** with Enhanced Input (WASD, mouse look, jump)
 - **Physics shooter** — press **K** to launch a physics ball from the character torso
 - **Collectible coins** — `BP_TPSCoin` pickups with overlap collection; ball projectiles can collect multiple coins
+- **Inventory** — coins, weapons, and ammo via `UTPSInventoryComponent` on the player controller (`ATPSItemPickup` + item definitions under `Content/ThirdPerson/Inventory`)
 - **Coin HUD** — on-screen count via `TPSCoinHUD` / `TPSCoinCountWidget`
 - **Level organization** — coin actors grouped under a **Coins** outliner folder (alongside Lighting, Playground)
 - **Template variants** — Combat, Platforming, and Side-scrolling sample modes included from the UE third-person template
@@ -44,6 +45,8 @@ Configured in your user `~/.cursor/mcp.json`. After changing keys, reload MCP in
 | `Source/TPS_005_git/ThirdPerson/` | Pickup, physics shooter, coin HUD |
 | `Content/ThirdPerson/` | Main level, character blueprints, input assets |
 | `Content/ThirdPerson/Coins/` | `BP_TPSCoin` collectible blueprint |
+| `Content/ThirdPerson/Inventory/` | Item definition data assets (`DA_Item_*`) |
+| `Content/ThirdPerson/Pickups/` | Weapon and ammo pickup blueprints |
 | `Content/Input/` | Enhanced Input actions and mapping contexts |
 | `Scripts/` | Editor Python helpers (coins, input, migration) |
 
@@ -52,6 +55,7 @@ Configured in your user `~/.cursor/mcp.json`. After changing keys, reload MCP in
 Run from the UE **Python** console (`py "..."`):
 
 - `Scripts/organize_coins.py` — move coin actors into the **Coins** outliner folder
+- `Scripts/setup_inventory.py` — create inventory item defs, pickup BPs, place weapons/ammo on quarter-cylinder platforms
 - `Scripts/fix_imc_shoot_k.py` — persist **K → shoot** on `IMC_Default`
 - `Scripts/migrate_tps_004_to_005.py` — reparent blueprints after project rename
 

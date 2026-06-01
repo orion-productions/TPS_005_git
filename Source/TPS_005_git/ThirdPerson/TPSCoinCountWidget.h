@@ -21,6 +21,7 @@ public:
 	UTPSCoinCountWidget(const FObjectInitializer& ObjectInitializer);
 
 	void UpdateCoinCount(int32 Count);
+	void UpdateInventorySummary(const FString& Summary);
 
 protected:
 	virtual void NativeConstruct() override;
@@ -31,4 +32,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> CoinText;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> InventoryText;
 };
