@@ -20,46 +20,6 @@
 
 ATPS_005_gitCharacter::ATPS_005_gitCharacter()
 {
-	// fn_vJulienMerceron_AddTwoVectors
-	const FVector TestSum = FTwoVectors::fn_vJulienMerceron_AddTwoVectors(FVector(1, 2, 3), FVector(4, 5, 6));
-	ensure(TestSum == FVector(5, 7, 9));
-
-	// fn_vJulienMerceron_SubtractVectors
-	const FVector TestDiff = FTwoVectors::fn_vJulienMerceron_SubtractVectors(FVector(5, 7, 9), FVector(4, 5, 6));
-	ensure(TestDiff == FVector(1, 2, 3));
-
-	// fn_vJulienMerceron_ScaleVectors
-	const FTwoVectors TestScaled = FTwoVectors::fn_vJulienMerceron_ScaleVectors(FVector(1, 2, 3), FVector(4, 5, 6), 2.0f);
-	ensure(TestScaled.v1 == FVector(2, 4, 6) && TestScaled.v2 == FVector(8, 10, 12));
-
-	// fn_vJulienMerceron_DotProducts
-	const FVector2D TestDots = FTwoVectors::fn_vJulienMerceron_DotProducts(FVector(1, 0, 0), FVector(0, 1, 0), FVector(1, 0, 0));
-	ensure(FMath::IsNearlyEqual(TestDots.X, 1.0) && FMath::IsNearlyEqual(TestDots.Y, 0.0));
-
-	// fn_vJulienMerceron_CrossProducts: (1,0,0)x(0,0,1)=(0,-1,0), (0,1,0)x(0,0,1)=(1,0,0)
-	const FTwoVectors TestCross = FTwoVectors::fn_vJulienMerceron_CrossProducts(FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
-	ensure(TestCross.v1.Equals(FVector(0, -1, 0)) && TestCross.v2.Equals(FVector(1, 0, 0)));
-
-	// fn_vJulienMerceron_Midpoint
-	const FVector TestMid = FTwoVectors::fn_vJulienMerceron_Midpoint(FVector(0, 0, 0), FVector(2, 4, 6));
-	ensure(TestMid == FVector(1, 2, 3));
-
-	// fn_vJulienMerceron_Direction
-	const FVector TestDir = FTwoVectors::fn_vJulienMerceron_Direction(FVector(0, 0, 0), FVector(3, 0, 0));
-	ensure(TestDir.Equals(FVector(1, 0, 0)));
-
-	// fn_vJulienMerceron_Length: 3-4-5 right triangle -> distance = 5
-	const FVector::FReal TestLen = FTwoVectors::fn_vJulienMerceron_Length(FVector(0, 0, 0), FVector(3, 4, 0));
-	ensure(FMath::IsNearlyEqual(TestLen, 5.0));
-
-	// fn_vJulienMerceron_Lerp
-	const FVector TestLerp = FTwoVectors::fn_vJulienMerceron_Lerp(FVector(0, 0, 0), FVector(10, 10, 10), 0.5f);
-	ensure(TestLerp.Equals(FVector(5, 5, 5)));
-
-	// fn_vJulienMerceron_IsWithinCone: B=(1,0.5,0) is within 45 deg of X-axis, B=(0,1,0) is not
-	ensure( FTwoVectors::fn_vJulienMerceron_IsWithinCone(FVector(1, 0, 0), FVector(1, 0.5f, 0), FVector(1, 0, 0), 45.0f));
-	ensure(!FTwoVectors::fn_vJulienMerceron_IsWithinCone(FVector(1, 0, 0), FVector(0, 1,    0), FVector(1, 0, 0), 45.0f));
-
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		

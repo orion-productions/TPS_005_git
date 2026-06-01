@@ -78,7 +78,7 @@ PICKUP_SPECS = {
         "weapon_family": WEAPON_PISTOL,
         "mesh": "/Game/Weapons_Free/Meshes/SM_pistol_drum_001.SM_pistol_drum_001",
         "sound": "/Game/Interface_And_Item_Sounds/Cues/Abstract_Pop_01_Cue.Abstract_Pop_01_Cue",
-        "qty": 12,
+        "qty": 20,
         "scale": 5.0,
         "rotation": (90.0, 0.0, 0.0),
         "offset": (0.0, 0.0, 55.0),
@@ -89,7 +89,7 @@ PICKUP_SPECS = {
         "weapon_family": WEAPON_RIFLE,
         "mesh": "/Game/Weapons_Free/Meshes/SM_rifle_magazine_001.SM_rifle_magazine_001",
         "sound": "/Game/Interface_And_Item_Sounds/Cues/Abstract_Pop_02_Cue.Abstract_Pop_02_Cue",
-        "qty": 30,
+        "qty": 20,
         "scale": 5.0,
         "rotation": (90.0, 0.0, 0.0),
         "offset": (0.0, 0.0, 55.0),
@@ -100,7 +100,7 @@ PICKUP_SPECS = {
         "weapon_family": WEAPON_SHOTGUN,
         "mesh": "/Game/Weapons_Free/Meshes/SM_pistol_drum_001.SM_pistol_drum_001",
         "sound": "/Game/Interface_And_Item_Sounds/Cues/Abstract_Pop_03_Cue.Abstract_Pop_03_Cue",
-        "qty": 8,
+        "qty": 20,
         "scale": 5.0,
         "rotation": (90.0, 0.0, 0.0),
         "offset": (0.0, 0.0, 55.0),
@@ -111,7 +111,7 @@ PICKUP_SPECS = {
         "weapon_family": WEAPON_SNIPER,
         "mesh": "/Game/Weapons_Free/Meshes/SM_rifle_magazine_001.SM_rifle_magazine_001",
         "sound": "/Game/Interface_And_Item_Sounds/Cues/Abstract_Pop_04_Cue.Abstract_Pop_04_Cue",
-        "qty": 10,
+        "qty": 20,
         "scale": 5.0,
         "rotation": (90.0, 0.0, 0.0),
         "offset": (0.0, 0.0, 55.0),
@@ -121,9 +121,9 @@ PICKUP_SPECS = {
 # One pickup centered on top of each anchor actor (Outliner labels).
 WEAPON_PLACEMENTS = [
     ("BP_Pickup_Pistol", "SM_Cube"),
-    ("BP_Pickup_Rifle", "SM_Cube 8"),
-    ("BP_Pickup_Shotgun", "SM_Cube 10"),
-    ("BP_Pickup_Sniper", "SM_Cube 12"),
+    ("BP_Pickup_Rifle", "SM_Cube8"),
+    ("BP_Pickup_Shotgun", "SM_Cube10"),
+    ("BP_Pickup_Sniper", "SM_Cube12"),
 ]
 
 AMMO_PLACEMENTS = [
@@ -138,6 +138,10 @@ ACTOR_LABEL_ALIASES = {
     "SM_QuarterCylinder 2": "SM_QuarterCylinder2",
     "SM_QuarterCylinder 3": "SM_QuarterCylinder3",
     "SM_QuarterCylinder 4": "SM_QuarterCylinder4",
+    # Legacy spaced labels from early playground layout docs.
+    "SM_Cube 8": "SM_Cube8",
+    "SM_Cube 10": "SM_Cube10",
+    "SM_Cube 12": "SM_Cube12",
 }
 
 

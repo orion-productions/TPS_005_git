@@ -28,9 +28,31 @@ bool UTPSInventoryComponent::AddItem(FName ItemId, int32 Amount, ETPSInventoryIt
 		return false;
 	}
 
-	if (ItemType == ETPSInventoryItemType::Weapon && GetItemQuantity(ItemId) > 0)
+	if (ItemType == ETPSInventoryItemType::Ammo)
 	{
-		return false;
+		ReserveAmmo += AmmoPerPickup;
+		OnInventoryChanged.Broadcast();
+		return true;
+	}
+
+	if (ItemType == ETPSInventoryItemType::Weapon)
+	{
+		if (GetItemQuantity(ItemId) > 0)
+		{
+			return false;
+		}
+
+		ItemQuantities.Add(ItemId, 1);
+		ItemTypes.Add(ItemId, static_cast<uint8>(ItemType));
+
+		const ETPSWeaponFamily Family = WeaponFamilyFromItemId(ItemId);
+		if (Family != ETPSWeaponFamily::None)
+		{
+			WeaponMagazineAmmo.Add(static_cast<uint8>(Family), GetMaxMagazineForWeapon(Family));
+		}
+
+		OnInventoryChanged.Broadcast();
+		return true;
 	}
 
 	int32* Existing = ItemQuantities.Find(ItemId);
@@ -56,13 +78,52 @@ bool UTPSInventoryComponent::HasWeapon(ETPSWeaponFamily WeaponFamily) const
 
 int32 UTPSInventoryComponent::GetAmmoForWeaponFamily(ETPSWeaponFamily WeaponFamily) const
 {
-	const FName AmmoId = AmmoItemIdForWeaponFamily(WeaponFamily);
-	return AmmoId.IsNone() ? 0 : GetItemQuantity(AmmoId);
+	return ReserveAmmo;
+}
+
+int32 UTPSInventoryComponent::GetWeaponMagazineAmmo(ETPSWeaponFamily WeaponFamily) const
+{
+	const int32* Rounds = WeaponMagazineAmmo.Find(static_cast<uint8>(WeaponFamily));
+	return Rounds ? *Rounds : 0;
+}
+
+int32 UTPSInventoryComponent::GetMaxMagazineForWeapon(ETPSWeaponFamily WeaponFamily)
+{
+	switch (WeaponFamily)
+	{
+	case ETPSWeaponFamily::Pistol:  return 9;
+	case ETPSWeaponFamily::Rifle:   return 18;
+	case ETPSWeaponFamily::Shotgun: return 5;
+	case ETPSWeaponFamily::Sniper:  return 3;
+	default: return 0;
+	}
+}
+
+bool UTPSInventoryComponent::ReloadWeaponMagazine(ETPSWeaponFamily WeaponFamily)
+{
+	if (!HasWeapon(WeaponFamily))
+	{
+		return false;
+	}
+
+	const int32 MaxRounds = GetMaxMagazineForWeapon(WeaponFamily);
+	int32& Magazine = WeaponMagazineAmmo.FindOrAdd(static_cast<uint8>(WeaponFamily));
+	const int32 Needed = MaxRounds - Magazine;
+	if (Needed <= 0 || ReserveAmmo <= 0)
+	{
+		return false;
+	}
+
+	const int32 ToLoad = FMath::Min(Needed, ReserveAmmo);
+	Magazine += ToLoad;
+	ReserveAmmo -= ToLoad;
+	OnInventoryChanged.Broadcast();
+	return ToLoad > 0;
 }
 
 FString UTPSInventoryComponent::BuildInventorySummary() const
 {
-	FString Summary = FString::Printf(TEXT("COINS: %d"), GetCoinCount());
+	FString Summary = FString::Printf(TEXT("Coins: %d\nAmmo: %d"), GetCoinCount(), ReserveAmmo);
 
 	static const ETPSWeaponFamily Families[] = {
 		ETPSWeaponFamily::Pistol,
@@ -73,34 +134,23 @@ FString UTPSInventoryComponent::BuildInventorySummary() const
 
 	for (ETPSWeaponFamily Family : Families)
 	{
-		const FName WeaponId = WeaponItemIdForWeaponFamily(Family);
-		const int32 WeaponCount = GetItemQuantity(WeaponId);
-		const int32 AmmoCount = GetAmmoForWeaponFamily(Family);
-
-		if (WeaponCount > 0 || AmmoCount > 0)
+		const TCHAR* Label = TEXT("?");
+		switch (Family)
 		{
-			const TCHAR* Label = TEXT("?");
-			switch (Family)
-			{
-			case ETPSWeaponFamily::Pistol:  Label = TEXT("Pistol"); break;
-			case ETPSWeaponFamily::Rifle:   Label = TEXT("Rifle"); break;
-			case ETPSWeaponFamily::Shotgun: Label = TEXT("Shotgun"); break;
-			case ETPSWeaponFamily::Sniper:  Label = TEXT("Sniper"); break;
-			default: break;
-			}
+		case ETPSWeaponFamily::Pistol:  Label = TEXT("Pistol"); break;
+		case ETPSWeaponFamily::Rifle:   Label = TEXT("Rifle"); break;
+		case ETPSWeaponFamily::Shotgun: Label = TEXT("ShotGun"); break;
+		case ETPSWeaponFamily::Sniper:  Label = TEXT("Sniper"); break;
+		default: break;
+		}
 
-			if (WeaponCount > 0 && AmmoCount > 0)
-			{
-				Summary += FString::Printf(TEXT("\n%s (ammo %d)"), Label, AmmoCount);
-			}
-			else if (WeaponCount > 0)
-			{
-				Summary += FString::Printf(TEXT("\n%s"), Label);
-			}
-			else
-			{
-				Summary += FString::Printf(TEXT("\n%s ammo: %d"), Label, AmmoCount);
-			}
+		if (HasWeapon(Family))
+		{
+			Summary += FString::Printf(TEXT("\n%s: %d"), Label, GetWeaponMagazineAmmo(Family));
+		}
+		else
+		{
+			Summary += FString::Printf(TEXT("\n%s"), Label);
 		}
 	}
 
@@ -129,4 +179,14 @@ FName UTPSInventoryComponent::WeaponItemIdForWeaponFamily(ETPSWeaponFamily Weapo
 	case ETPSWeaponFamily::Sniper:  return FName(TEXT("Weapon_Sniper"));
 	default: return NAME_None;
 	}
+}
+
+ETPSWeaponFamily UTPSInventoryComponent::WeaponFamilyFromItemId(FName ItemId)
+{
+	const FString Id = ItemId.ToString();
+	if (Id == TEXT("Weapon_Pistol"))  { return ETPSWeaponFamily::Pistol; }
+	if (Id == TEXT("Weapon_Rifle"))   { return ETPSWeaponFamily::Rifle; }
+	if (Id == TEXT("Weapon_Shotgun")) { return ETPSWeaponFamily::Shotgun; }
+	if (Id == TEXT("Weapon_Sniper"))  { return ETPSWeaponFamily::Sniper; }
+	return ETPSWeaponFamily::None;
 }

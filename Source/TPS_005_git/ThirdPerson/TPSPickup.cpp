@@ -7,8 +7,10 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include "TPSInventoryComponent.h"
 #include "TPSInventoryItemDefinition.h"
+#include "TPS_005_git.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace TPSPickupPrivate
@@ -57,9 +59,92 @@ ATPSPickup::ATPSPickup()
 	}
 }
 
+bool ATPSPickup::IsAmmoPickup() const
+{
+	if (ItemDefinition && ItemDefinition->ItemType == ETPSInventoryItemType::Ammo)
+	{
+		return true;
+	}
+
+	if (FallbackItemType == ETPSInventoryItemType::Ammo)
+	{
+		return true;
+	}
+
+	return FallbackItemId.ToString().StartsWith(TEXT("Ammo_"));
+}
+
+void ATPSPickup::BeginAmmoRespawnCooldown()
+{
+	UWorld* World = GetWorld();
+	if (!World || bAmmoRespawnPending)
+	{
+		return;
+	}
+
+	bAmmoRespawnPending = true;
+	SetActorTickEnabled(false);
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
+
+	TArray<UStaticMeshComponent*> MeshComponents;
+	GetComponents<UStaticMeshComponent>(MeshComponents);
+	for (UStaticMeshComponent* Component : MeshComponents)
+	{
+		if (Component)
+		{
+			Component->SetVisibility(false, true);
+			Component->SetHiddenInGame(true);
+		}
+	}
+
+	UE_LOG(LogTPS_005_git, Log, TEXT("Ammo pickup %s hidden; respawn in %.1fs"), *GetName(), AmmoRespawnDelaySeconds);
+
+	World->GetTimerManager().ClearTimer(AmmoRespawnTimerHandle);
+	World->GetTimerManager().SetTimer(
+		AmmoRespawnTimerHandle,
+		this,
+		&ATPSPickup::FinishAmmoRespawn,
+		AmmoRespawnDelaySeconds,
+		false);
+}
+
+void ATPSPickup::FinishAmmoRespawn()
+{
+	bAmmoRespawnPending = false;
+
+	SetActorTransform(SpawnTransform);
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	SetActorTickEnabled(true);
+
+	if (Sphere)
+	{
+		Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		Sphere->SetGenerateOverlapEvents(true);
+	}
+
+	ApplyWorldMesh();
+
+	TArray<UStaticMeshComponent*> MeshComponents;
+	GetComponents<UStaticMeshComponent>(MeshComponents);
+	for (UStaticMeshComponent* Component : MeshComponents)
+	{
+		if (Component)
+		{
+			Component->SetVisibility(true, true);
+			Component->SetHiddenInGame(false);
+		}
+	}
+
+	UE_LOG(LogTPS_005_git, Log, TEXT("Ammo pickup %s respawned at %s"), *GetName(), *SpawnTransform.GetLocation().ToString());
+}
+
 void ATPSPickup::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SpawnTransform = GetActorTransform();
 
 	if (!FallbackItemId.IsNone() && FallbackItemId != FName(TEXT("Coin")))
 	{
@@ -82,6 +167,11 @@ void ATPSPickup::BeginPlay()
 
 void ATPSPickup::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(AmmoRespawnTimerHandle);
+	}
+
 	OnActorBeginOverlap.RemoveDynamic(this, &ATPSPickup::BeginOverlap);
 	Super::EndPlay(EndPlayReason);
 }
@@ -220,6 +310,11 @@ void ATPSPickup::PlayPickupFeedback(APlayerController* PlayerController, USoundB
 
 void ATPSPickup::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
+	if (bAmmoRespawnPending)
+	{
+		return;
+	}
+
 	const AActor* ValidOther = TPSPickupPrivate::AsValidOverlapActor(OtherActor);
 	if (!ValidOther || !Sphere || !Sphere->IsCollisionEnabled())
 	{
@@ -296,6 +391,12 @@ void ATPSPickup::ApplyPickup(APlayerController* PlayerController)
 	if (bCollected)
 	{
 		PlayPickupFeedback(PlayerController, ResolvePickupSound());
+
+		if (IsAmmoPickup())
+		{
+			BeginAmmoRespawnCooldown();
+			return;
+		}
 
 		SetActorEnableCollision(false);
 		SetActorHiddenInGame(true);

@@ -1,4 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+// Inventory HUD: 580x400 panel, 40pt font, red/yellow ownership colors.
 
 #include "TPSCoinCountWidget.h"
 #include "TPS_005_gitPlayerController.h"
@@ -7,14 +8,40 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Blueprint/WidgetTree.h"
 #include "Engine/Texture2D.h"
 #include "Styling/SlateColor.h"
 
+const FLinearColor UTPSCoinCountWidget::NoneOwnedTextColor = FLinearColor(0.95f, 0.12f, 0.12f, 1.f);
+const FLinearColor UTPSCoinCountWidget::SomeOwnedTextColor = FLinearColor(1.f, 0.92f, 0.1f, 1.f);
+
+namespace TPSCoinCountWidgetPrivate
+{
+	UTextBlock* MakeLine(UWidgetTree* Tree, UVerticalBox* Parent, const FName& Name)
+	{
+		UTextBlock* Line = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), Name);
+		FSlateFontInfo Font = Line->GetFont();
+		Font.Size = UTPSCoinCountWidget::HudFontSize;
+		Line->SetFont(Font);
+		Line->SetShadowOffset(FVector2D(1.f, 1.f));
+		Line->SetShadowColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.35f));
+
+		if (UVerticalBoxSlot* Slot = Parent->AddChildToVerticalBox(Line))
+		{
+			Slot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+			Slot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+		}
+
+		return Line;
+	}
+}
+
 UTPSCoinCountWidget::UTPSCoinCountWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	bIsFocusable = false;
+	SetIsFocusable(false);
 }
 
 void UTPSCoinCountWidget::NativeConstruct()
@@ -35,49 +62,33 @@ void UTPSCoinCountWidget::NativeConstruct()
 	{
 		BackgroundImage->SetBrushFromTexture(PanelTex, true);
 	}
-	BackgroundImage->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.92f));
+	BackgroundImage->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.94f));
 
-	CoinText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CoinText"));
-	FSlateFontInfo Font = CoinText->GetFont();
-	Font.Size = 22;
-	CoinText->SetFont(Font);
-	CoinText->SetColorAndOpacity(FSlateColor(FLinearColor(0.15f, 0.95f, 1.f, 1.f)));
-	CoinText->SetShadowOffset(FVector2D(1.f, 1.f));
-	CoinText->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, 0.85f));
-	UpdateCoinCount(0);
-
-	InventoryText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InventoryText"));
-	FSlateFontInfo InvFont = InventoryText->GetFont();
-	InvFont.Size = 16;
-	InventoryText->SetFont(InvFont);
-	InventoryText->SetColorAndOpacity(FSlateColor(FLinearColor(0.85f, 0.95f, 1.f, 1.f)));
-	InventoryText->SetShadowOffset(FVector2D(1.f, 1.f));
-	InventoryText->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, 0.85f));
-	UpdateInventorySummary(TEXT(""));
+	LinesBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("LinesBox"));
+	CoinsLine = TPSCoinCountWidgetPrivate::MakeLine(WidgetTree, LinesBox, TEXT("CoinsLine"));
+	AmmoLine = TPSCoinCountWidgetPrivate::MakeLine(WidgetTree, LinesBox, TEXT("AmmoLine"));
+	PistolLine = TPSCoinCountWidgetPrivate::MakeLine(WidgetTree, LinesBox, TEXT("PistolLine"));
+	RifleLine = TPSCoinCountWidgetPrivate::MakeLine(WidgetTree, LinesBox, TEXT("RifleLine"));
+	ShotgunLine = TPSCoinCountWidgetPrivate::MakeLine(WidgetTree, LinesBox, TEXT("ShotgunLine"));
+	SniperLine = TPSCoinCountWidgetPrivate::MakeLine(WidgetTree, LinesBox, TEXT("SniperLine"));
 
 	if (UCanvasPanelSlot* PanelSlot = Canvas->AddChildToCanvas(BackgroundImage))
 	{
 		PanelSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
 		PanelSlot->SetAlignment(FVector2D(0.f, 1.f));
-		PanelSlot->SetPosition(FVector2D(16.f, -16.f));
-		PanelSlot->SetSize(FVector2D(300.f, 140.f));
+		PanelSlot->SetPosition(FVector2D(24.f, -24.f));
+		PanelSlot->SetSize(FVector2D(580.f, 400.f));
 	}
 
-	if (UCanvasPanelSlot* TextSlot = Canvas->AddChildToCanvas(CoinText))
+	if (UCanvasPanelSlot* BoxSlot = Canvas->AddChildToCanvas(LinesBox))
 	{
-		TextSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
-		TextSlot->SetAlignment(FVector2D(0.f, 1.f));
-		TextSlot->SetPosition(FVector2D(36.f, -38.f));
-		TextSlot->SetSize(FVector2D(260.f, 28.f));
+		BoxSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
+		BoxSlot->SetAlignment(FVector2D(0.f, 1.f));
+		BoxSlot->SetPosition(FVector2D(52.f, -368.f));
+		BoxSlot->SetSize(FVector2D(500.f, 340.f));
 	}
 
-	if (UCanvasPanelSlot* InvSlot = Canvas->AddChildToCanvas(InventoryText))
-	{
-		InvSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
-		InvSlot->SetAlignment(FVector2D(0.f, 1.f));
-		InvSlot->SetPosition(FVector2D(36.f, -118.f));
-		InvSlot->SetSize(FVector2D(260.f, 72.f));
-	}
+	RefreshFromInventory(nullptr);
 }
 
 void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -86,33 +97,51 @@ void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 
 	if (ATPS_005_gitPlayerController* PC = Cast<ATPS_005_gitPlayerController>(GetOwningPlayer()))
 	{
-		UpdateCoinCount(PC->CoinCount);
-		if (UTPSInventoryComponent* Inventory = PC->GetInventoryComponent())
+		RefreshFromInventory(PC->GetInventoryComponent());
+	}
+}
+
+void UTPSCoinCountWidget::SetLineText(UTextBlock* Line, const FString& Text, bool bHasSome)
+{
+	if (!Line)
+	{
+		return;
+	}
+
+	Line->SetText(FText::FromString(Text));
+	const FLinearColor Color = bHasSome ? SomeOwnedTextColor : NoneOwnedTextColor;
+	Line->SetColorAndOpacity(FSlateColor(Color));
+}
+
+void UTPSCoinCountWidget::RefreshFromInventory(UTPSInventoryComponent* Inventory)
+{
+	const int32 Coins = Inventory ? Inventory->GetCoinCount() : 0;
+	const int32 Ammo = Inventory ? Inventory->GetReserveAmmo() : 0;
+
+	SetLineText(CoinsLine, FString::Printf(TEXT("Coins: %d"), Coins), Coins > 0);
+	SetLineText(AmmoLine, FString::Printf(TEXT("Ammo: %d"), Ammo), Ammo > 0);
+
+	auto UpdateWeaponLine = [this, Inventory](UTextBlock* Line, ETPSWeaponFamily Family, const TCHAR* Label)
+	{
+		if (!Line)
 		{
-			FString Summary = Inventory->BuildInventorySummary();
-			TArray<FString> Lines;
-			Summary.ParseIntoArrayLines(Lines, false);
-			if (Lines.Num() > 0 && Lines[0].StartsWith(TEXT("COINS")))
-			{
-				Lines.RemoveAt(0);
-			}
-			UpdateInventorySummary(FString::Join(Lines, TEXT("\n")));
+			return;
 		}
-	}
-}
 
-void UTPSCoinCountWidget::UpdateCoinCount(int32 Count)
-{
-	if (CoinText)
-	{
-		CoinText->SetText(FText::FromString(FString::Printf(TEXT("COINS: %d"), Count)));
-	}
-}
+		const bool bOwned = Inventory && Inventory->HasWeapon(Family);
+		if (bOwned)
+		{
+			const int32 Mag = Inventory->GetWeaponMagazineAmmo(Family);
+			SetLineText(Line, FString::Printf(TEXT("%s: %d"), Label, Mag), true);
+		}
+		else
+		{
+			SetLineText(Line, Label, false);
+		}
+	};
 
-void UTPSCoinCountWidget::UpdateInventorySummary(const FString& Summary)
-{
-	if (InventoryText)
-	{
-		InventoryText->SetText(FText::FromString(Summary));
-	}
+	UpdateWeaponLine(PistolLine, ETPSWeaponFamily::Pistol, TEXT("Pistol"));
+	UpdateWeaponLine(RifleLine, ETPSWeaponFamily::Rifle, TEXT("Rifle"));
+	UpdateWeaponLine(ShotgunLine, ETPSWeaponFamily::Shotgun, TEXT("ShotGun"));
+	UpdateWeaponLine(SniperLine, ETPSWeaponFamily::Sniper, TEXT("Sniper"));
 }

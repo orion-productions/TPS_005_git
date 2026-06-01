@@ -82,6 +82,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pickup|Visual")
 	FVector WorldMeshOffset = FVector::ZeroVector;
 
+	/** Ammo pickups hide and reappear after this delay instead of being destroyed. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pickup|Respawn", meta = (ClampMin = 0.1))
+	float AmmoRespawnDelaySeconds = 10.0f;
+
+	FTimerHandle AmmoRespawnTimerHandle;
+	FTransform SpawnTransform;
+	bool bAmmoRespawnPending = false;
+
+	bool IsAmmoPickup() const;
+	void BeginAmmoRespawnCooldown();
+	void FinishAmmoRespawn();
+
 	/** Handles pickup collision */
 	UFUNCTION()
 	void BeginOverlap(AActor* OverlappedActor, AActor* OtherActor);

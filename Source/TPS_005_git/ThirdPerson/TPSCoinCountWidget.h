@@ -8,9 +8,10 @@
 
 class UImage;
 class UTextBlock;
+class UVerticalBox;
 
 /**
- * Sci-fi coin counter HUD (bottom-left). Built in C++ so no Widget Designer setup is required.
+ * Bottom-left inventory HUD: coins, reserve ammo, and four weapons with magazine counts.
  */
 UCLASS()
 class TPS_005_GIT_API UTPSCoinCountWidget : public UUserWidget
@@ -20,19 +21,39 @@ class TPS_005_GIT_API UTPSCoinCountWidget : public UUserWidget
 public:
 	UTPSCoinCountWidget(const FObjectInitializer& ObjectInitializer);
 
-	void UpdateCoinCount(int32 Count);
-	void UpdateInventorySummary(const FString& Summary);
+	void RefreshFromInventory(class UTPSInventoryComponent* Inventory);
+
+	static constexpr int32 HudFontSize = 40;
+	static const FLinearColor NoneOwnedTextColor;
+	static const FLinearColor SomeOwnedTextColor;
 
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+	void SetLineText(UTextBlock* Line, const FString& Text, bool bHasSome);
+
 	UPROPERTY()
 	TObjectPtr<UImage> BackgroundImage;
 
 	UPROPERTY()
-	TObjectPtr<UTextBlock> CoinText;
+	TObjectPtr<UVerticalBox> LinesBox;
 
 	UPROPERTY()
-	TObjectPtr<UTextBlock> InventoryText;
+	TObjectPtr<UTextBlock> CoinsLine;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> AmmoLine;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> PistolLine;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> RifleLine;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> ShotgunLine;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> SniperLine;
 };
