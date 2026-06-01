@@ -2,6 +2,8 @@
 
 #include "TPS_005_gitCharacter.h"
 #include "ThirdPerson/TPSPhysicsShooterComponent.h"
+#include "ThirdPerson/TPSWeaponComponent.h"
+#include "ThirdPerson/TPSInventoryTypes.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -53,6 +55,7 @@ ATPS_005_gitCharacter::ATPS_005_gitCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	PhysicsShooter = CreateDefaultSubobject<UTPSPhysicsShooterComponent>(TEXT("PhysicsShooter"));
+	WeaponComponent = CreateDefaultSubobject<UTPSWeaponComponent>(TEXT("WeaponComponent"));
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> ShootActionAsset(
 		TEXT("/Game/Input/Actions/IA_Shoot.IA_Shoot"));
@@ -69,6 +72,7 @@ void ATPS_005_gitCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	EnsureShootInputMapping();
+	EnsureWeaponInputMapping();
 }
 
 void ATPS_005_gitCharacter::EnsureShootInputMapping()
@@ -105,6 +109,47 @@ void ATPS_005_gitCharacter::EnsureShootInputMapping()
 	Subsystem->AddMappingContext(ShootInputMappingContext, 1);
 }
 
+void ATPS_005_gitCharacter::EnsureWeaponInputMapping()
+{
+	const APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC || !PC->IsLocalController())
+	{
+		return;
+	}
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+	if (!Subsystem)
+	{
+		return;
+	}
+
+	if (!WeaponInputMappingContext)
+	{
+		auto MakeAction = [this](const FString& Name) -> UInputAction*
+		{
+			UInputAction* Action = NewObject<UInputAction>(this, *Name);
+			Action->ValueType = EInputActionValueType::Boolean;
+			return Action;
+		};
+
+		EquipPistolAction  = MakeAction(TEXT("IA_EquipPistol"));
+		EquipRifleAction   = MakeAction(TEXT("IA_EquipRifle"));
+		EquipShotgunAction = MakeAction(TEXT("IA_EquipShotgun"));
+		EquipSniperAction  = MakeAction(TEXT("IA_EquipSniper"));
+		ReloadAction       = MakeAction(TEXT("IA_Reload"));
+
+		WeaponInputMappingContext = NewObject<UInputMappingContext>(this, TEXT("WeaponInputMappingContext"));
+		WeaponInputMappingContext->MapKey(EquipPistolAction,  EKeys::One);
+		WeaponInputMappingContext->MapKey(EquipRifleAction,   EKeys::Two);
+		WeaponInputMappingContext->MapKey(EquipShotgunAction, EKeys::Three);
+		WeaponInputMappingContext->MapKey(EquipSniperAction,  EKeys::Four);
+		WeaponInputMappingContext->MapKey(ReloadAction,       EKeys::R);
+	}
+
+	Subsystem->AddMappingContext(WeaponInputMappingContext, 1);
+}
+
 void ATPS_005_gitCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (!ShootAction)
@@ -113,25 +158,27 @@ void ATPS_005_gitCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	}
 
 	EnsureShootInputMapping();
+	EnsureWeaponInputMapping();
 
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATPS_005_gitCharacter::Move);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ATPS_005_gitCharacter::Look);
-
-		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATPS_005_gitCharacter::Look);
 
 		if (ShootAction)
 		{
 			EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ATPS_005_gitCharacter::ShootPressed);
 		}
+
+		if (EquipPistolAction)  { EnhancedInputComponent->BindAction(EquipPistolAction,  ETriggerEvent::Started, this, &ATPS_005_gitCharacter::EquipPistolPressed); }
+		if (EquipRifleAction)   { EnhancedInputComponent->BindAction(EquipRifleAction,   ETriggerEvent::Started, this, &ATPS_005_gitCharacter::EquipRiflePressed); }
+		if (EquipShotgunAction) { EnhancedInputComponent->BindAction(EquipShotgunAction, ETriggerEvent::Started, this, &ATPS_005_gitCharacter::EquipShotgunPressed); }
+		if (EquipSniperAction)  { EnhancedInputComponent->BindAction(EquipSniperAction,  ETriggerEvent::Started, this, &ATPS_005_gitCharacter::EquipSniperPressed); }
+		if (ReloadAction)       { EnhancedInputComponent->BindAction(ReloadAction,       ETriggerEvent::Started, this, &ATPS_005_gitCharacter::ReloadPressed); }
 	}
 	else
 	{
@@ -201,7 +248,39 @@ void ATPS_005_gitCharacter::DoJumpEnd()
 
 void ATPS_005_gitCharacter::ShootPressed()
 {
-	ShootProjectileFromTorso();
+	if (WeaponComponent && WeaponComponent->IsWeaponEquipped())
+	{
+		WeaponComponent->FireWeapon();
+	}
+	else
+	{
+		ShootProjectileFromTorso();
+	}
+}
+
+void ATPS_005_gitCharacter::EquipPistolPressed()
+{
+	if (WeaponComponent) { WeaponComponent->EquipWeapon(ETPSWeaponFamily::Pistol); }
+}
+
+void ATPS_005_gitCharacter::EquipRiflePressed()
+{
+	if (WeaponComponent) { WeaponComponent->EquipWeapon(ETPSWeaponFamily::Rifle); }
+}
+
+void ATPS_005_gitCharacter::EquipShotgunPressed()
+{
+	if (WeaponComponent) { WeaponComponent->EquipWeapon(ETPSWeaponFamily::Shotgun); }
+}
+
+void ATPS_005_gitCharacter::EquipSniperPressed()
+{
+	if (WeaponComponent) { WeaponComponent->EquipWeapon(ETPSWeaponFamily::Sniper); }
+}
+
+void ATPS_005_gitCharacter::ReloadPressed()
+{
+	if (WeaponComponent) { WeaponComponent->ReloadWeapon(); }
 }
 
 void ATPS_005_gitCharacter::ShootProjectileFromTorso()

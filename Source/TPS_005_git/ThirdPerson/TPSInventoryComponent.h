@@ -54,9 +54,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	static int32 GetMaxMagazineForWeapon(ETPSWeaponFamily WeaponFamily);
 
-	/** Fills magazine up to max from reserve (for future equip/reload). */
+	/** Fills magazine up to max from reserve. */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool ReloadWeaponMagazine(ETPSWeaponFamily WeaponFamily);
+
+	/** Deducts rounds from the weapon magazine (clamped to 0). Returns false if already empty. */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool ConsumeWeaponAmmo(ETPSWeaponFamily WeaponFamily, int32 Amount = 1);
 
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	FString BuildInventorySummary() const;

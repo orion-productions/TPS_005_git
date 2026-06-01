@@ -181,6 +181,19 @@ FName UTPSInventoryComponent::WeaponItemIdForWeaponFamily(ETPSWeaponFamily Weapo
 	}
 }
 
+bool UTPSInventoryComponent::ConsumeWeaponAmmo(ETPSWeaponFamily WeaponFamily, int32 Amount)
+{
+	const uint8 Key = static_cast<uint8>(WeaponFamily);
+	int32* Current = WeaponMagazineAmmo.Find(Key);
+	if (!Current || *Current <= 0)
+	{
+		return false;
+	}
+	*Current = FMath::Max(0, *Current - Amount);
+	OnInventoryChanged.Broadcast();
+	return true;
+}
+
 ETPSWeaponFamily UTPSInventoryComponent::WeaponFamilyFromItemId(FName ItemId)
 {
 	const FString Id = ItemId.ToString();
