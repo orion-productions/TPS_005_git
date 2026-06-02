@@ -3,8 +3,8 @@
 
 #include "TPSCoinCountWidget.h"
 #include "TPS_005_gitPlayerController.h"
-#include "TPSInventoryComponent.h"
 #include "TPS_005_gitCharacter.h"
+#include "TPSInventoryComponent.h"
 #include "ThirdPerson/TPSWeaponComponent.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -101,9 +101,9 @@ void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 	if (ATPS_005_gitPlayerController* PC = Cast<ATPS_005_gitPlayerController>(GetOwningPlayer()))
 	{
 		ETPSWeaponFamily Equipped = ETPSWeaponFamily::None;
-		if (const APawn* Pawn = PC->GetPawn())
+		if (const ATPS_005_gitCharacter* Char = Cast<ATPS_005_gitCharacter>(PC->GetPawn()))
 		{
-			if (const UTPSWeaponComponent* WC = Pawn->FindComponentByClass<UTPSWeaponComponent>())
+			if (const UTPSWeaponComponent* WC = Char->GetWeaponComponent())
 			{
 				Equipped = WC->GetEquippedWeapon();
 			}
@@ -145,7 +145,7 @@ void UTPSCoinCountWidget::RefreshFromInventory(UTPSInventoryComponent* Inventory
 		const bool bOwned    = Inventory && Inventory->HasWeapon(Family);
 		const bool bEquipped = (EquippedWeapon == Family);
 
-		if (bEquipped)
+		if (bEquipped && Inventory)
 		{
 			const int32 Mag = Inventory->GetWeaponMagazineAmmo(Family);
 			SetLineTextWithColor(Line, FString::Printf(TEXT("%s: %d"), Label, Mag), EquippedWeaponColor);
