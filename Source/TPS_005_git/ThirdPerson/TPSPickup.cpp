@@ -204,23 +204,15 @@ void ATPSPickup::ApplyWorldMesh()
 	if (WorldMesh)
 	{
 		FRotator DisplayRotation = WorldMeshRotation;
-		if (DisplayRotation.IsZero())
+		const FString ItemIdStr = FallbackItemId.IsNone() ? TEXT("") : FallbackItemId.ToString();
+		if (DisplayRotation.IsZero() && ItemIdStr.StartsWith(TEXT("Ammo_")))
 		{
-			const FString ItemIdStr = FallbackItemId.ToString();
-			if (ItemIdStr.StartsWith(TEXT("Weapon_")))
-			{
-				DisplayRotation = FRotator(-90.0f, 90.0f, 90.0f);
-			}
-			else if (ItemIdStr.StartsWith(TEXT("Ammo_")))
-			{
-				DisplayRotation = FRotator(90.0f, 0.0f, 0.0f);
-			}
+			DisplayRotation = FRotator(90.0f, 0.0f, 0.0f);
 		}
 
 		FVector DisplayOffset = WorldMeshOffset;
 		if (!FallbackItemId.IsNone() && FallbackItemId != FName(TEXT("Coin")))
 		{
-			const FString ItemIdStr = FallbackItemId.ToString();
 			if (ItemIdStr.StartsWith(TEXT("Ammo_")) && DisplayOffset.Z < 40.0f)
 			{
 				DisplayOffset.Z = 55.0f;

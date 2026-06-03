@@ -297,14 +297,7 @@ void UTPSWeaponComponent::AttachWeaponMesh(const FTPSWeaponFamilyConfig& Config)
 		Char->GetMesh(),
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		HandSocketName);
-	// If MeshRelativeRotation is zero fall back to Yaw=180 which flips the barrel to point
-	// away from the elbow (the hand_r socket's local +X points toward the elbow in A-pose).
-	FRotator Rotation = Config.MeshRelativeRotation;
-	if (Rotation.IsNearlyZero(0.5f))
-	{
-		Rotation = FRotator(0.f, 180.f, 0.f);
-	}
-	WeaponMeshComp->SetRelativeLocationAndRotation(Config.MeshRelativeOffset, Rotation);
+	WeaponMeshComp->SetRelativeLocationAndRotation(Config.MeshRelativeOffset, Config.MeshRelativeRotation);
 	// Apply configured scale; fall back to 0.3 for Weapons_Free meshes (they're very large relative to Manny).
 	// After a full editor restart the MeshRelativeScale Blueprint property will be tunable per weapon.
 	FVector Scale = Config.MeshRelativeScale;
