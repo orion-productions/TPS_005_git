@@ -102,17 +102,16 @@ void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 	if (ATPS_005_gitPlayerController* PC = Cast<ATPS_005_gitPlayerController>(GetOwningPlayer()))
 	{
 		ETPSWeaponFamily Equipped = ETPSWeaponFamily::None;
-		const ATPS_005_gitCharacter* Char = Cast<ATPS_005_gitCharacter>(PC->GetPawn());
-		if (Char)
+		APawn* Pawn = PC->GetPawn();
+		if (const UTPSWeaponComponent* WC = Pawn ? Pawn->FindComponentByClass<UTPSWeaponComponent>() : nullptr)
 		{
-			if (const UTPSWeaponComponent* WC = Char->GetWeaponComponent())
-			{
-				Equipped = WC->GetEquippedWeapon();
-			}
+			Equipped = WC->GetEquippedWeapon();
 		}
 
-		UE_LOG(LogTPS_005_git, VeryVerbose, TEXT("[HUD] Char=%s Equipped=%d"),
-			Char ? TEXT("ok") : TEXT("null"), (int32)Equipped);
+		UE_LOG(LogTPS_005_git, Warning, TEXT("[HUD] Pawn=%s WC=%s Equipped=%d"),
+			Pawn ? TEXT("ok") : TEXT("null"),
+			(Pawn && Pawn->FindComponentByClass<UTPSWeaponComponent>()) ? TEXT("ok") : TEXT("null"),
+			(int32)Equipped);
 
 		RefreshFromInventory(PC->GetInventoryComponent(), Equipped);
 	}
