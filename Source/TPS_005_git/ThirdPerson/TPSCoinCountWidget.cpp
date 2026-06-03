@@ -2,6 +2,7 @@
 // Inventory HUD: 580x400 panel, 40pt font, red/yellow/light-blue ownership colors.
 
 #include "TPSCoinCountWidget.h"
+#include "TPS_005_git.h"
 #include "TPS_005_gitPlayerController.h"
 #include "TPS_005_gitCharacter.h"
 #include "TPSInventoryComponent.h"
@@ -101,13 +102,17 @@ void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 	if (ATPS_005_gitPlayerController* PC = Cast<ATPS_005_gitPlayerController>(GetOwningPlayer()))
 	{
 		ETPSWeaponFamily Equipped = ETPSWeaponFamily::None;
-		if (const ATPS_005_gitCharacter* Char = Cast<ATPS_005_gitCharacter>(PC->GetPawn()))
+		const ATPS_005_gitCharacter* Char = Cast<ATPS_005_gitCharacter>(PC->GetPawn());
+		if (Char)
 		{
 			if (const UTPSWeaponComponent* WC = Char->GetWeaponComponent())
 			{
 				Equipped = WC->GetEquippedWeapon();
 			}
 		}
+
+		UE_LOG(LogTPS_005_git, VeryVerbose, TEXT("[HUD] Char=%s Equipped=%d"),
+			Char ? TEXT("ok") : TEXT("null"), (int32)Equipped);
 
 		RefreshFromInventory(PC->GetInventoryComponent(), Equipped);
 	}
