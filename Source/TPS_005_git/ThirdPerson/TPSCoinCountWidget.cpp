@@ -108,6 +108,7 @@ void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 				Equipped = WC->GetEquippedWeapon();
 			}
 		}
+
 		RefreshFromInventory(PC->GetInventoryComponent(), Equipped);
 	}
 }
