@@ -46,6 +46,7 @@ ATPSPickup::ATPSPickup()
 	Sphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	Sphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	Sphere->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Overlap);
+	Sphere->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	PickupMesh->SetupAttachment(RootComponent);
@@ -337,11 +338,21 @@ void ATPSPickup::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 	ApplyPickup(PC);
 }
 
-void ATPSPickup::ApplyPickup(APlayerController* PlayerController)
+bool ATPSPickup::TryCollectByPlayer(APlayerController* PlayerController)
+{
+	if (bAmmoRespawnPending || !IsValid(PlayerController) || !Sphere || !Sphere->IsCollisionEnabled())
+	{
+		return false;
+	}
+
+	return ApplyPickup(PlayerController);
+}
+
+bool ATPSPickup::ApplyPickup(APlayerController* PlayerController)
 {
 	if (!PlayerController)
 	{
-		return;
+		return false;
 	}
 
 	const bool bHasInventoryConfig = ItemDefinition != nullptr || !FallbackItemId.IsNone();
@@ -377,7 +388,7 @@ void ATPSPickup::ApplyPickup(APlayerController* PlayerController)
 
 	if (bHasInventoryConfig && !bCollected)
 	{
-		return;
+		return false;
 	}
 
 	if (bCollected)
@@ -387,13 +398,13 @@ void ATPSPickup::ApplyPickup(APlayerController* PlayerController)
 		if (IsAmmoPickup())
 		{
 			BeginAmmoRespawnCooldown();
-			return;
+			return true;
 		}
 
 		SetActorEnableCollision(false);
 		SetActorHiddenInGame(true);
 		Destroy();
-		return;
+		return true;
 	}
 
 	PlayPickupFeedback(PlayerController, ResolvePickupSound());
@@ -401,4 +412,5 @@ void ATPSPickup::ApplyPickup(APlayerController* PlayerController)
 	SetActorEnableCollision(false);
 	SetActorHiddenInGame(true);
 	Destroy();
+	return true;
 }

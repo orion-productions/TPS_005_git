@@ -99,7 +99,7 @@ protected:
 	void BeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	/** Apply collection logic (inventory, VFX). Called after overlap validation. */
-	virtual void ApplyPickup(APlayerController* PlayerController);
+	virtual bool ApplyPickup(APlayerController* PlayerController);
 
 	USoundBase* ResolvePickupSound() const;
 	void PlayPickupFeedback(APlayerController* PlayerController, USoundBase* SoundToPlay) const;
@@ -111,6 +111,10 @@ protected:
 	void BP_OnPickedUp();
 
 public:
+
+	/** Collect this pickup for a player (e.g. weapon hitscan). Returns false if collection failed. */
+	UFUNCTION(BlueprintCallable, Category="Pickup")
+	bool TryCollectByPlayer(APlayerController* PlayerController);
 
 	FORCEINLINE USphereComponent* GetSphere() const { return Sphere; }
 };

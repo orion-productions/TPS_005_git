@@ -84,12 +84,24 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UInputMappingContext> WeaponInputMappingContext;
 
+	/** Spring-arm socket offset while aiming (positive Y shifts camera right, character left on screen). */
+	UPROPERTY(EditAnywhere, Category="Camera|Aim")
+	FVector AimCameraSocketOffset = FVector(0.f, 75.f, 15.f);
+
+	/** How quickly the aim camera offset blends in and out. */
+	UPROPERTY(EditAnywhere, Category="Camera|Aim", meta=(ClampMin="0.1"))
+	float AimCameraInterpSpeed = 6.f;
+
+	bool bAimCameraActive = false;
+
 public:
 
 	/** Constructor */
 	ATPS_005_gitCharacter();	
 
 protected:
+
+	virtual void Tick(float DeltaTime) override;
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -135,6 +147,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Shoot")
 	void ShootProjectileFromTorso();
+
+	/** Shifts the follow camera into over-the-shoulder aim while a weapon is equipped. */
+	void SetAimCameraActive(bool bActive);
 
 public:
 

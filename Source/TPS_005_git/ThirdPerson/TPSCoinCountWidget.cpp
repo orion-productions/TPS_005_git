@@ -1,5 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-// Inventory HUD: 580x400 panel, 40pt font, red/yellow/light-blue ownership colors.
+// Inventory HUD: 580x400 panel, 40pt font, red/yellow/light-blue ownership colors (equipped = light blue).
 
 #include "TPSCoinCountWidget.h"
 #include "TPS_005_git.h"
@@ -46,6 +46,7 @@ UTPSCoinCountWidget::UTPSCoinCountWidget(const FObjectInitializer& ObjectInitial
 	: Super(ObjectInitializer)
 {
 	SetIsFocusable(false);
+	bHasScriptImplementedTick = true;
 }
 
 void UTPSCoinCountWidget::NativeConstruct()
@@ -108,11 +109,6 @@ void UTPSCoinCountWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 			Equipped = WC->GetEquippedWeapon();
 		}
 
-		UE_LOG(LogTPS_005_git, Warning, TEXT("[HUD] Pawn=%s WC=%s Equipped=%d"),
-			Pawn ? TEXT("ok") : TEXT("null"),
-			(Pawn && Pawn->FindComponentByClass<UTPSWeaponComponent>()) ? TEXT("ok") : TEXT("null"),
-			(int32)Equipped);
-
 		RefreshFromInventory(PC->GetInventoryComponent(), Equipped);
 	}
 }
@@ -150,10 +146,15 @@ void UTPSCoinCountWidget::RefreshFromInventory(UTPSInventoryComponent* Inventory
 		const bool bOwned    = Inventory && Inventory->HasWeapon(Family);
 		const bool bEquipped = (EquippedWeapon == Family);
 
-		if (bEquipped && Inventory)
+		if (bEquipped)
 		{
-			const int32 Mag = Inventory->GetWeaponMagazineAmmo(Family);
-			SetLineTextWithColor(Line, FString::Printf(TEXT("%s: %d"), Label, Mag), EquippedWeaponColor);
+			FString Text = Label;
+			if (Inventory)
+			{
+				const int32 Mag = Inventory->GetWeaponMagazineAmmo(Family);
+				Text = FString::Printf(TEXT("%s: %d"), Label, Mag);
+			}
+			SetLineTextWithColor(Line, Text, EquippedWeaponColor);
 		}
 		else if (bOwned)
 		{

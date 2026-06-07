@@ -9,6 +9,7 @@
 class UInputMappingContext;
 class UUserWidget;
 class UTPSCoinCountWidget;
+class UTPSCrosshairWidget;
 class UTPSInventoryComponent;
 
 /**
@@ -60,6 +61,10 @@ public:
 	/** Sci-fi UMG coin counter (bottom-left) */
 	UPROPERTY()
 	TObjectPtr<UTPSCoinCountWidget> CoinCountWidget;
+
+	/** Yellow screen-center crosshair while a weapon is equipped. */
+	UPROPERTY()
+	TObjectPtr<UTPSCrosshairWidget> CrosshairWidget;
 
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UTPSInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
