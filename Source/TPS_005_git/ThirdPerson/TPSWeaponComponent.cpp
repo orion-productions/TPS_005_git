@@ -4,7 +4,9 @@
 #include "TPSWeaponComponent.h"
 #include "TPSInventoryComponent.h"
 #include "TPSPickup.h"
+#include "TPSAnimInstance.h"
 #include "TPS_005_gitCharacter.h"
+#include "UObject/UnrealType.h"
 #include "TPS_005_gitPlayerController.h"
 #include "TPS_005_git.h"
 #include "GameFramework/Character.h"
@@ -20,6 +22,25 @@
 
 namespace TPSWeaponComponentPrivate
 {
+	static void SetAnimAimingFlag(UAnimInstance* AnimInst, bool bAiming)
+	{
+		if (!AnimInst)
+		{
+			return;
+		}
+
+		if (UTPSAnimInstance* TPSAnim = Cast<UTPSAnimInstance>(AnimInst))
+		{
+			TPSAnim->bIsAiming = bAiming;
+			return;
+		}
+
+		if (FBoolProperty* BoolProp = FindFProperty<FBoolProperty>(AnimInst->GetClass(), TEXT("bIsAiming")))
+		{
+			BoolProp->SetPropertyValue_InContainer(AnimInst, bAiming);
+		}
+	}
+
 	template<typename TObjectType>
 	TObjectType* LoadDefaultObject(const TCHAR* Path)
 	{
@@ -563,48 +584,24 @@ void UTPSWeaponComponent::StartAimStance()
 		return;
 	}
 
-	const FTPSWeaponFamilyConfig* Config = GetConfig(EquippedWeapon);
-	if (!Config || !Config->AimStanceMontage)
-	{
-		return;
-	}
-
 	ACharacter* Char = GetOwnerCharacter();
-	if (!Char)
+	if (!Char || !Char->GetMesh())
 	{
 		return;
 	}
 
-	UAnimInstance* AnimInst = Char->GetMesh()->GetAnimInstance();
-	if (!AnimInst)
-	{
-		return;
-	}
-
-	if (ActiveAimMontage)
-	{
-		AnimInst->Montage_Stop(0.15f, ActiveAimMontage);
-		ActiveAimMontage = nullptr;
-	}
-
-	ActiveAimMontage = AnimInst->PlaySlotAnimationAsDynamicMontage(
-		Config->AimStanceMontage, AimMontageSlotName, 0.2f, 0.2f, 1.f, 0);
+	TPSWeaponComponentPrivate::SetAnimAimingFlag(Char->GetMesh()->GetAnimInstance(), true);
 }
 
 void UTPSWeaponComponent::StopAimStance()
 {
 	ACharacter* Char = GetOwnerCharacter();
-	if (Char)
+	if (!Char || !Char->GetMesh())
 	{
-		if (UAnimInstance* AnimInst = Char->GetMesh()->GetAnimInstance())
-		{
-			if (ActiveAimMontage)
-			{
-				AnimInst->Montage_Stop(0.2f, ActiveAimMontage);
-			}
-		}
+		return;
 	}
-	ActiveAimMontage = nullptr;
+
+	TPSWeaponComponentPrivate::SetAnimAimingFlag(Char->GetMesh()->GetAnimInstance(), false);
 }
 
 void UTPSWeaponComponent::ApplyAimMovementStance(bool bAiming)
@@ -632,6 +629,15 @@ void UTPSWeaponComponent::ApplyAimMovementStance(bool bAiming)
 	if (ATPS_005_gitCharacter* TPSChar = Cast<ATPS_005_gitCharacter>(Char))
 	{
 		TPSChar->SetAimCameraActive(bAiming);
+	}
+
+	if (bAiming)
+	{
+		StartAimStance();
+	}
+	else
+	{
+		StopAimStance();
 	}
 }
 

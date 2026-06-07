@@ -139,9 +139,6 @@ private:
 	FTimerHandle UnequipTimerHandle;
 	FTimerHandle FireAnimTimerHandle;
 
-	UPROPERTY(Transient)
-	TObjectPtr<UAnimMontage> ActiveAimMontage;
-
 	const FTPSWeaponFamilyConfig* GetConfig(ETPSWeaponFamily Family) const;
 	bool IsPlayableOwnerCharacter() const;
 	ACharacter* GetOwnerCharacter() const;
